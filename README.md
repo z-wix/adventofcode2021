@@ -1,5 +1,7 @@
 # Advent of Code 2021
 
+![santa-sled-loop_dribble](https://user-images.githubusercontent.com/64862250/144521364-457b985a-7084-4d3c-b050-d9985949b42e.gif)
+
 Participating in the [Advent of Code 2021](https://adventofcode.com/2021)! Hopefully I can remember to do it :)
 
 I am doing it in R this year, since it is my first time and I am most comfortable in R.
