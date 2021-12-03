@@ -15,7 +15,7 @@ library(zoo)
 data <- read_csv(here::here("day1", "data", "day1_data.csv"))
 ```
 
-### Prompt
+### The Prompt
 
 Considering every single measurement isn't as useful as you expected: *there's just too much noise in the data.*
 
