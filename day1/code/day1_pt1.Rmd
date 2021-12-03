@@ -1,9 +1,15 @@
 ---
-title: "Day 1: Sonar Sweep"
+title: "Day 1 Part 1: Sonar Sweep"
 author: "Zack Wixom"
 date: "12/2/2021"
 output: github_document
 ---
+
+```{r setup}
+# Packages
+library(tidyverser)
+
+```
 
 ### Prompt
 
@@ -76,6 +82,7 @@ sonar_sweep %>%
     n = n()
   )
 
+write.csv(sonar_sweep, here::here("day1", "data", "day1_sonar.csv"))
 ```
 
 

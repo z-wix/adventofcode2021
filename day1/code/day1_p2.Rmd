@@ -1,0 +1,146 @@
+---
+title: 'Day 1 Part 2: Three-Measure Sliding Window'
+author: "Zack Wixom"
+date: "12/3/2021"
+output: github_document
+---
+
+```{r setup}
+# Packages
+library(tidyverse)
+library(runner)
+library(zoo)
+
+# Read in data
+data <- read_csv(here::here("day1", "data", "day1_data.csv"))
+```
+
+### Prompt
+
+Considering every single measurement isn't as useful as you expected: *there's just too much noise in the data.*
+
+Instead, consider sums of a **three-measurement sliding window**. Again considering the above example:
+
+```
+199  A      
+200  A B    
+208  A B C  
+210    B C D
+200  E   C D
+207  E F   D
+240  E F G  
+269    F G H
+260      G H
+263        H
+
+```
+
+Start by comparing the first and second three-measurement windows. The measurements in the first window are marked A (199, 200, 208); their sum is `199 + 200 + 208 = 607`. The second window is marked B (200, 208, 210); its sum is `618`. The sum of measurements in the second window is larger than the sum of the first, so this first comparison increased.
+
+Your goal now is to count the number of times the sum of measurements in this sliding window increases from the previous sum. So, compare A with B, then compare B with C, then C with D, and so on. Stop when there aren't enough measurements left to create a new three-measurement sum.
+
+In the above example, the sum of each three-measurement window is as follows:
+
+```
+
+A: 607 (N/A - no previous sum)
+B: 618 (increased)
+C: 618 (no change)
+D: 617 (decreased)
+E: 647 (increased)
+F: 716 (increased)
+G: 769 (increased)
+H: 792 (increased)
+
+```
+In this example, there are 5 sums that are larger than the previous sum.
+
+
+### The Challenge
+
+First I need to figure out how to add these three-measure sliding windows to my data so I can calculate the answer.
+
+I am going to use the `zoo` package which allows me to use `roll` functions. So I can apply functions to windows within the data
+
+Also we are using the same data from day1 but I am going to first make sure I can replicate the example shown above before.
+
+```{r prep}
+# Test based on example given
+B <- c(199, 200, 208, 210, 200, 207, 240, 269, 260, 263)
+
+# calculate
+k <- 3
+rollapply(B, 3, function(x) max(rollsum(x, k)), partial = TRUE, fill = NA)
+
+# empty vector to fill
+x <- vector(mode = "numeric", length = 10L)
+# For Loop
+for (i in seq_along(B)) {
+  # print progress
+  print(i)
+  # Calculate rolling sum
+  x[i] <- rollsum(B[i:(i+2)], k = 3)
+}
+# Convert to dataset
+output <- as.tibble(x)
+
+```
+
+Now that it works, I can apply it to the whole data input.
+
+```{r for loop}
+
+# Empty Vector to fill
+x <- vector(mode = "numeric", length = nrow(data))
+# For Loop
+for (i in seq_along(x)) {
+  # Extract data we need
+  y <- data[2]
+  # Calculate rolling sum
+  x[i] <- rollsum(y[i:(i+2),], k = 3)
+}
+# Convert to dataset
+output <- as.tibble(x)
+
+output
+
+```
+
+Sweet now that we have the calculations I'll join it back to the original and using similar method as `day1_code.Rmd` I'll calculate all the increases.
+
+```{r summarize}
+# join columns
+data1 <- cbind(data, output)
+
+# calculate increase/decrease
+windows <- data1 %>% 
+  mutate(
+    diff = value - lag(value, default = value[1])
+  ) %>% 
+  mutate(
+    delta = case_when(
+      diff == 0 ~ "No change",
+      diff < 0 ~ "Decrease",
+      diff > 0 ~ "Increase"
+    )
+  )
+
+# Summarize
+windows %>% 
+  group_by(delta) %>% 
+  summarize(
+    n = n()
+  )
+
+# write salutation data to csv
+write.csv(windows, here::here("day1", "data", "day1_windows.csv"))
+
+```
+
+### The Answer
+
+**How many sums are larger than the previous sum?**
+
+1103
+
+
