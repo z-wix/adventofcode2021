@@ -1,0 +1,112 @@
+---
+title: 'Day 2 Part 1: Dive!'
+author: "Zack Wixom"
+date: "12/3/2021"
+output: github_document
+---
+
+```{r setup}
+# Packages
+library(tidyverse)
+library(runner)
+library(zoo)
+
+# Read in data
+data_raw <- read_csv(here::here("day2", "data", "day2_data_raw.csv"))
+```
+
+### The Prompt
+
+Now, you need to figure out how to pilot this thing.
+
+It seems like the submarine can take a series of commands like forward 1, down 2, or up 3:
+
+- forward X increases the horizontal position by X units.
+- down X increases the depth by X units.
+- up X decreases the depth by X units.
+
+*Note that since you're on a submarine, down and up affect your depth, and so they have the opposite result of what you might expect.*
+
+The submarine seems to already have a planned course (your puzzle input). You should probably figure out where it's going. For example:
+
+```
+forward 5
+down 5
+forward 8
+up 3
+down 8
+forward 2
+```
+
+**Your horizontal position and depth both start at 0**. The steps above would then modify them as follows:
+
+- `forward 5` adds 5 to your horizontal position, a total of 5.
+- `down 5` adds 5 to your depth, resulting in a value of 5.
+- `forward 8` adds 8 to your horizontal position, a total of 13.
+- `up 3` decreases your depth by 3, resulting in a value of 2.
+- `down 8` adds 8 to your depth, resulting in a value of 10.
+- `forward 2` adds 2 to your horizontal position, a total of 15.
+
+After following these instructions, you would have a horizontal position of 15 and a depth of 10. (Multiplying these together produces 150.)
+
+Calculate the horizontal position and depth you would have after following the planned course. 
+
+### The Challenge
+
+First I need to separate the data between the direction and the movement. as well as add depth and horizontal position.
+
+```{r clean}
+data <- data_raw %>% 
+  separate(col = x, into = c("direction", "movement")) %>% 
+  mutate(
+    position = rep(0),
+    depth = rep(0)
+  )
+
+data$movement <- as.numeric(data$movement)
+
+data
+
+```
+Sweet, now we need to use this to calculate our position and depth. We start at (0,0) and we need to see where we are at by 2000 rows.
+
+```{r}
+sub_position <- data %>% 
+  mutate(
+    position = case_when(
+      direction == "forward" ~ movement,
+      direction == "down" ~ 0,
+      direction == "up" ~ 0
+    ),
+    depth = case_when(
+      direction == "forward" ~ 0,
+      direction == "down" ~ movement,
+      direction == "up" ~ -movement
+    )
+  )
+  
+
+```
+
+Now I need to sum it all up and I should have my position:
+
+```{r}
+# Sumarize final depth and position
+sub_position %>% 
+  summarize(
+    position_final = sum(position),
+    depth_fianl = sum(depth)
+  )
+
+# multiply final position
+sum(sub_position$position)*sum(sub_position$depth)
+  
+
+```
+
+
+### The Answer
+
+**What do you get if you multiply your final horizontal position by your final depth?**
+
+1,746,616

@@ -1,11 +1,17 @@
 ---
-title: "Day 1: Sonar Sweep"
+title: "Day 1 Part 1: Sonar Sweep"
 author: "Zack Wixom"
 date: "12/2/2021"
 output: github_document
 ---
 
-### Prompt
+```{r setup}
+# Packages
+library(tidyverser)
+
+```
+
+### The Prompt
 
 As the submarine drops below the surface of the ocean, it automatically performs a sonar sweep of the nearby sea floor. On a small screen, the sonar sweep report (your puzzle input) appears: each line is a measurement of the sea floor depth as the sweep looks further and further away from the submarine.
 
@@ -76,6 +82,7 @@ sonar_sweep %>%
     n = n()
   )
 
+write.csv(sonar_sweep, here::here("day1", "data", "day1_sonar.csv"))
 ```
 
 
