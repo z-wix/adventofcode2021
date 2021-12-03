@@ -7,7 +7,7 @@ output: github_document
 
 ```{r setup}
 # Packages
-library(tidyverser)
+library(tidyverse)
 
 ```
 
