@@ -71,17 +71,17 @@ data
 Sweet, now we need to use this to calculate our position and depth. We start at (0,0) and we need to see where we are at by 2000 rows.
 
 ```{r}
-sub_position <- data %>% 
+sub_position <- test %>% 
   mutate(
     position = case_when(
-      direction == "forward" ~ movement,
+      direction == "forward" ~ aim,
       direction == "down" ~ 0,
       direction == "up" ~ 0
     ),
     depth = case_when(
       direction == "forward" ~ 0,
-      direction == "down" ~ movement,
-      direction == "up" ~ -movement
+      direction == "down" ~ aim,
+      direction == "up" ~ -aim
     )
   )
   

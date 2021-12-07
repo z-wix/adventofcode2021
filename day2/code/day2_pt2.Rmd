@@ -49,3 +49,124 @@ After following these new instructions, you would have a horizontal position of 
 
 Using this new interpretation of the commands, calculate the horizontal position and depth you would have after following the planned course. What do you get if you multiply your final horizontal position by your final depth?
 
+### The Challenge
+
+Let's try to recreate the example first so I can do it correctly then we will run the real data.
+
+```{r}
+test_raw <- c(
+  "forward 5",
+  "down 5",
+  "forward 8",
+  "up 3", 
+  "down 8",
+  "forward 2"
+)
+
+test <- as.tibble(test_raw) %>% 
+  separate(col = value, into = c("direction", "movement")) %>% 
+  mutate(
+    movement = as.numeric(movement),
+    position = rep(0),
+    depth = rep(0),
+    aim = rep(0)
+  )
+
+test
+
+```
+
+```{r}
+sub_position <- test %>% 
+  mutate(
+    position = case_when(
+      direction == "forward" ~ movement, # increases position by X
+      direction == "down" ~ 0,
+      direction == "up" ~ 0
+    ),
+    aim = case_when(
+      direction == "forward" ~ 0,
+      direction == "down" ~ movement, # increases aim by x 
+      direction == "up" ~ -movement # decreases aim by x
+    ),
+    depth = case_when(
+      direction == "forward" ~ position * cumsum(aim),
+      direction == "down" ~ 0,
+      direction == "up" ~ 0
+    )
+  )
+
+sub_position
+
+# Summarize final depth and position
+sub_position %>% 
+  summarize(
+    position_final = sum(position),
+    depth_final = sum(depth),
+    aim_final = sum(aim)
+  )
+
+# multiply final position
+sum(sub_position$position)*sum(sub_position$depth)
+
+```
+
+
+Alright it worked, I had to use a cumulative sum on the aim to calculate the depth.
+
+So I'll run the full data now that it works
+
+```{r}
+# prep data
+data <- data_raw %>% 
+  separate(col = x, into = c("direction", "movement")) %>% 
+  mutate(
+    movement = as.numeric(movement),
+    position = rep(0),
+    depth = rep(0),
+    aim = rep(0)
+  )
+
+# calculate positions
+sub_position <- data %>% 
+  mutate(
+    position = case_when(
+      direction == "forward" ~ movement, # increases position by X
+      direction == "down" ~ 0,
+      direction == "up" ~ 0
+    ),
+    aim = case_when(
+      direction == "forward" ~ 0,
+      direction == "down" ~ movement, # increases aim by x 
+      direction == "up" ~ -movement # decreases aim by x
+    ),
+    depth = case_when(
+      direction == "forward" ~ position * cumsum(aim),
+      direction == "down" ~ 0,
+      direction == "up" ~ 0
+    )
+  )
+
+
+# Summarize final depth and position
+sub_position %>% 
+  summarize(
+    position_final = sum(position),
+    depth_final = sum(depth),
+    aim_final = sum(aim)
+  )
+
+# multiply final position
+sum(sub_position$position)*sum(sub_position$depth)
+
+
+```
+
+### The Answer
+
+**What do you get if you multiply your final horizontal position by your final depth?**
+
+1,741,971,043
+
+
+
