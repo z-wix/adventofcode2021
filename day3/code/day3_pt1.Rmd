@@ -2,7 +2,7 @@
 title: 'Day 3 Part 1: Binary Diagnostic'
 author: "Zack Wixom"
 date: "12/7/2021"
-output: html_document
+output: github_document
 ---
 
 ```{r setup}
@@ -51,7 +51,7 @@ The epsilon rate is calculated in a similar way; rather than use the most common
 
 ### The Challenge
 
-So we should be able to just sort the table to find the least and most common value giving us the Gamma and Epsilon rate, then convert it to decimal and multiply them.
+So in order to find the most and least common element for the gamma and epsilon rate I will need to clean up the data by separating the values from the original input as well well as then create a for loop for each rate.
 
 ```{r}
 # prep data
@@ -60,8 +60,42 @@ data <- data_raw %>%
   mutate(
     A = data_raw$x
   )
-# find gamma and epsilon rate
-summary(test)
+
+# test function to be used in finding rates
+names(which.max(table(data$B)))
+
+# find epsilon rate with for loop
+epsilon <- vector("numeric", length = ncol(data))
+for (i in seq(ncol(data))) {
+  #print(i)
+  x <- names(which.min(table(data[i])))
+  epsilon[i] <- x
+}
+
+# find gamma rate with for loop
+gamma <- vector("numeric", length = ncol(data))
+for (i in seq(ncol(data))) {
+ # print(i)
+  x <- names(which.max(table(data[i])))
+  gamma[i] <- x
+}
+
+```
+
+Now that I have the gamma and epsilon rates I need to recombine the values then convert to integers from their binary form
+
+```{r}
+# convert gamma rate from binary to integer
+gamma_rate <- paste(c(gamma[3:14]), collapse = '') %>% 
+  strtoi(base = 2)
+
+# convert epsilon rate from binary to integer
+epsilon_rate <- paste(c(epsilon[3:14]), collapse = '') %>% 
+  strtoi(base = 2)
+
+# multiple together
+gamma_rate * epsilon_rate
+
 ```
 
 
@@ -73,3 +107,4 @@ Use the binary numbers in your diagnostic report to calculate the gamma rate and
 
 **What is the power consumption of the submarine? (Be sure to represent your answer in decimal, not binary.)**
 
+3242606
