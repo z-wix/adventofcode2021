@@ -16,4 +16,4 @@ I am doing it in R this year, since it is my first time and I am most comfortabl
 
 > Collect stars by solving puzzles. Two puzzles will be made available on each day in the Advent calendar; the second puzzle is unlocked when you complete the first. *Each puzzle grants one star*. Good luck!
 
-**Number of Stars: 4**
+**Number of Stars: 6**

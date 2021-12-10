@@ -1,0 +1,238 @@
+---
+title: "Day 3 Part 2: Life Support Rating"
+author: "Zack Wixom"
+date: "12/9/2021"
+output: github_document
+---
+
+```{r setup}
+# Packages
+library(tidyverse)
+
+# Load Data
+data_raw <- read_csv(here::here("day3", "data", "day3_data.csv"))
+
+```
+
+### The Prompt
+
+Next, you should verify the **life support rating**, which can be determined by *multiplying the oxygen generator rating by the CO2 scrubber rating.*
+
+Both the oxygen generator rating and the CO2 scrubber rating are values that can be found in your diagnostic report - finding them is the tricky part. Both values are located using a similar process that involves filtering out values until only one remains. Before searching for either rating value, start with the full list of binary numbers from your diagnostic report and consider just *the first bit* of those numbers. Then:
+
+-   Keep only numbers selected by the *bit criteria* for the type of rating value for which you are searching. Discard numbers which do not match the bit criteria.
+-   If you only have one number left, stop; this is the rating value for which you are searching.
+-   Otherwise, repeat the process, considering the next bit to the right.
+
+The *bit criteria* depends on which type of rating value you want to find:
+
+-   To find **oxygen generator rating**, determine the *most common* value (0 or 1) in the current bit position, and keep only numbers with that bit in that position. If 0 and 1 are equally common, keep values with a 1 in the position being considered.
+-   To find **CO2 scrubber rating**, determine the *least common* value (0 or 1) in the current bit position, and keep only numbers with that bit in that position. If 0 and 1 are equally common, keep values with a 0 in the position being considered.
+
+For example, to determine the **oxygen generator rating** value using the same example diagnostic report from above:
+
+-   Start with all 12 numbers and consider only the first bit of each number. There are more 1 bits (7) than 0 bits (5), so keep only the 7 numbers with a 1 in the first position: 11110, 10110, 10111, 10101, 11100, 10000, and 11001.
+-   Then, consider the second bit of the 7 remaining numbers: there are more 0 bits (4) than 1 bits (3), so keep only the 4 numbers with a 0 in the second position: 10110, 10111, 10101, and 10000.
+-   In the third position, three of the four numbers have a 1, so keep those three: 10110, 10111, and 10101.
+-   In the fourth position, two of the three numbers have a 1, so keep those two: 10110 and 10111.
+-   In the fifth position, there are an equal number of 0 bits and 1 bits (one each). So, to find the oxygen generator rating, keep the number with a 1 in that position: 10111.
+-   As there is only one number left, stop; the oxygen generator rating is 10111, or 23 in decimal.
+
+Then, to determine the CO2 scrubber rating value from the same example above:
+
+-   Start again with all 12 numbers and consider only the first bit of each number. There are fewer 0 bits (5) than 1 bits (7), so keep only the 5 numbers with a 0 in the first position: 00100, 01111, 00111, 00010, and 01010.
+-   Then, consider the second bit of the 5 remaining numbers: there are fewer 1 bits (2) than 0 bits (3), so keep only the 2 numbers with a 1 in the second position: 01111 and 01010.
+-   In the third position, there are an equal number of 0 bits and 1 bits (one each). So, to find the CO2 scrubber rating, keep the number with a 0 in that position: 01010.
+-   As there is only one number left, stop; the CO2 scrubber rating is 01010, or 10 in decimal.
+
+Finally, to find the life support rating, multiply the oxygen generator rating (23) by the CO2 scrubber rating (10) to get 230.
+
+
+### The Challenge
+
+First I want to replicate their example to make sure I can do it, before adding in all the data input. I'll do a manual loop first (filtering each step of the way) then a loop
+
+```{r}
+test_raw <- as.tibble(
+  c(
+    "00100",
+    "11110",
+    "10110",
+    "10111",
+    "10101",
+    "01111",
+    "00111",
+    "11100",
+    "10000",
+    "11001",
+    "00010",
+    "01010"
+  )
+)
+
+# prep data
+test <- test_raw %>% 
+  separate(col = value, into = c(LETTERS[seq(1, 6)]), sep = "") %>% 
+  mutate(
+    A = test_raw$value
+  )
+
+# Manual Loop
+test1 <- test %>% 
+  filter(test[2] == names(which.max(table(test[2]))))
+  
+test2 <- test1 %>% 
+  filter(test1[3] == names(which.max(table(test1[3]))))
+
+test3 <- test2 %>% 
+  filter(test2[4] == names(which.max(table(test2[4]))))
+
+test4 <- test3 %>% 
+  filter(test3[5] == names(which.max(table(test3[5]))))
+
+test5 <- test4 %>% 
+  filter(test4[6] == names(which.max(table(test4[6]))))
+
+
+```
+
+After testing, looks like my loop breaks when the two numbers are equal in occurance and defaults to one of them, so I need to include a conditional that checks to makes sure that the max and min are not equal and if it does then it will default to either 0 for CO2 or 1 for Oxygen.
+
+```{r}
+# For loop
+test_oxygen <- test
+for (i in c(2:6)) {
+  # for keeping track of which iteration I am on
+  print(i)
+  
+  # conditional to default value before doing loop
+  if (diff(table(test_oxygen[[i]])) == 0) {
+    test_oxygen <- test_oxygen %>% 
+      filter(test_oxygen[i] == 1)
+  } else {
+    # filtering loop
+    test_oxygen <- test_oxygen %>% 
+      filter(test_oxygen[i] == names(which.max(table(test_oxygen[i]))))
+  }
+  # check point
+  if (nrow(test_oxygen) == 1) {
+    break
+  }
+}
+
+test_oxygen
+```
+
+Alright now with the right for loop going, I can apply it back to the full data input!
+
+So since we are referencing the most common and least common values that we calculated in the last part I am going to just read those in for reference. We will also put our raw data input into separate columns for us so we can just simply filter out when needed.
+
+```{r}
+# read in gamma and epsilon and combine binary
+gamma <- readRDS(here::here("day3", "data", "gamma.rds"))
+gamma_ref <- paste(c(gamma[3:14]), collapse = '')
+
+epsilon <- readRDS(here::here("day3", "data", "epsilon.rds"))
+epsilon_ref <- paste(c(epsilon[3:14]), collapse = '')
+
+# prep data
+data <- data_raw %>% 
+  separate(col = x, into = c(LETTERS[seq(1, 13)]), sep = "") %>% 
+  mutate(
+    A = data_raw$x
+  )
+
+```
+
+Now that we can look at those rates we can see what the most and least common value was for each bit. Let's start to calculate our oxygen generator and CO2 scrubber rating.
+
+I'll need to make a new for loop that will allow me to filter on the most common value, then move to next column and filter by the next column's new least common value
+
+```{r}
+### Oxygen Generator Rating
+
+# For loop
+oxygen <- data
+for (i in c(3:14)) {
+  # for keeping track of which iteration I am on
+  print(i)
+  
+  # conditional to default value before doing loop
+  if (diff(table(oxygen[[i]])) == 0) {
+    # default if equal frequency
+    oxygen <- oxygen %>% 
+      filter(oxygen[i] == 1)
+    
+  } else {
+    # filtering loop
+    oxygen <- oxygen %>% 
+      filter(oxygen[i] == names(which.max(table(oxygen[i]))))
+  }
+  # check point
+  if (nrow(oxygen) == 1) {
+    break
+  }
+}
+
+# print result
+oxygen
+
+```
+
+Sweet we got `101110111101` as the Oxygen Generator Rating, let's move onto the CO2 scrubber.
+
+```{r}
+### CO2 Scrubber Rating
+
+# For loop
+scrubber <- data
+for (i in c(3:14)) {
+  # for keeping track of which iteration I am on
+  print(i)
+  
+  # conditional to default value before doing loop
+  if (diff(table(scrubber[[i]])) == 0) {
+    # default if equal frequency
+    scrubber <- scrubber %>% 
+      filter(scrubber[i] == 0)
+    
+  } else {
+    # filtering loop
+    scrubber <- scrubber %>% 
+      filter(scrubber[i] == names(which.min(table(scrubber[i]))))
+  }
+  # check point
+  if (nrow(scrubber) == 1) {
+    break
+  }
+}
+
+# print result
+scrubber
+
+```
+
+We got `011001010000` for the CO2 Scrubber rating, now to finish it off by converting them to decimals and multiplying them.
+
+```{r}
+
+# convert from binary to integer
+oxygen_rating <- oxygen[2] %>% 
+  strtoi(base = 2)
+
+# convert from binary to integer
+scrubber_rating <- scrubber[2] %>% 
+  strtoi(base = 2)
+
+# multiple together
+oxygen_rating * scrubber_rating
+
+```
+
+### The Answer
+
+Use the binary numbers in your diagnostic report to calculate the oxygen generator rating and CO2 scrubber rating, then multiply them together. 
+
+**What is the life support rating of the submarine? (Be sure to represent your answer in decimal, not binary.)**
+
+4856080
