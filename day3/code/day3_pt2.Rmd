@@ -50,6 +50,81 @@ Finally, to find the life support rating, multiply the oxygen generator rating (
 
 ### The Challenge
 
+First I want to replicate their example to make sure I can do it, before adding in all the data input. I'll do a manual loop first (filtering each step of the way) then a loop
+
+```{r}
+test_raw <- as.tibble(
+  c(
+    "00100",
+    "11110",
+    "10110",
+    "10111",
+    "10101",
+    "01111",
+    "00111",
+    "11100",
+    "10000",
+    "11001",
+    "00010",
+    "01010"
+  )
+)
+
+# prep data
+test <- test_raw %>% 
+  separate(col = value, into = c(LETTERS[seq(1, 6)]), sep = "") %>% 
+  mutate(
+    A = test_raw$value
+  )
+
+# Manual Loop
+test1 <- test %>% 
+  filter(test[2] == names(which.max(table(test[2]))))
+  
+test2 <- test1 %>% 
+  filter(test1[3] == names(which.max(table(test1[3]))))
+
+test3 <- test2 %>% 
+  filter(test2[4] == names(which.max(table(test2[4]))))
+
+test4 <- test3 %>% 
+  filter(test3[5] == names(which.max(table(test3[5]))))
+
+test5 <- test4 %>% 
+  filter(test4[6] == names(which.max(table(test4[6]))))
+
+
+```
+
+After testing, looks like my loop breaks when the two numbers are equal in occurance and defaults to one of them, so I need to include a conditional that checks to makes sure that the max and min are not equal and if it does then it will default to either 0 for CO2 or 1 for Oxygen.
+
+```{r}
+# For loop
+test_oxygen <- test
+for (i in c(2:6)) {
+  # for keeping track of which iteration I am on
+  print(i)
+  
+  # conditional to default value before doing loop
+  if (diff(table(test_oxygen[[i]])) == 0) {
+    test_oxygen <- test_oxygen %>% 
+      filter(test_oxygen[i] == 1)
+  } else {
+    # filtering loop
+    test_oxygen <- test_oxygen %>% 
+      filter(test_oxygen[i] == names(which.max(table(test_oxygen[i]))))
+  }
+  # check point
+  if (nrow(test_oxygen) == 1) {
+    break
+  }
+}
+
+test_oxygen
+```
+
+Alright now with the right for loop going, I can apply it back to the full data input!
+
 So since we are referencing the most common and least common values that we calculated in the last part I am going to just read those in for reference. We will also put our raw data input into separate columns for us so we can just simply filter out when needed.
 
 ```{r}
@@ -67,7 +142,6 @@ data <- data_raw %>%
     A = data_raw$x
   )
 
-
 ```
 
 Now that we can look at those rates we can see what the most and least common value was for each bit. Let's start to calculate our oxygen generator and CO2 scrubber rating.
@@ -83,10 +157,17 @@ for (i in c(3:14)) {
   # for keeping track of which iteration I am on
   print(i)
   
-  # filtering loop
-  oxygen <- oxygen %>% 
-    filter(oxygen[i] == names(which.max(table(oxygen[i]))))
-  
+  # conditional to default value before doing loop
+  if (diff(table(oxygen[[i]])) == 0) {
+    # default if equal frequency
+    oxygen <- oxygen %>% 
+      filter(oxygen[i] == 1)
+    
+  } else {
+    # filtering loop
+    oxygen <- oxygen %>% 
+      filter(oxygen[i] == names(which.max(table(oxygen[i]))))
+  }
   # check point
   if (nrow(oxygen) == 1) {
     break
@@ -98,7 +179,7 @@ oxygen
 
 ```
 
-Sweet we got `101110111100` as the Oxygen Generator Rating, let's move onto the CO2 scrubber.
+Sweet we got `101110111101` as the Oxygen Generator Rating, let's move onto the CO2 scrubber.
 
 ```{r}
 ### CO2 Scrubber Rating
@@ -109,10 +190,17 @@ for (i in c(3:14)) {
   # for keeping track of which iteration I am on
   print(i)
   
-  # filtering loop
-  scrubber <- scrubber %>% 
-    filter(scrubber[i] == names(which.min(table(scrubber[i]))))
-  
+  # conditional to default value before doing loop
+  if (diff(table(scrubber[[i]])) == 0) {
+    # default if equal frequency
+    scrubber <- scrubber %>% 
+      filter(scrubber[i] == 0)
+    
+  } else {
+    # filtering loop
+    scrubber <- scrubber %>% 
+      filter(scrubber[i] == names(which.min(table(scrubber[i]))))
+  }
   # check point
   if (nrow(scrubber) == 1) {
     break
@@ -147,4 +235,4 @@ Use the binary numbers in your diagnostic report to calculate the oxygen generat
 
 **What is the life support rating of the submarine? (Be sure to represent your answer in decimal, not binary.)**
 
-4854464
+4856080
