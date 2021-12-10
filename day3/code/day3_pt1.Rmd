@@ -96,6 +96,10 @@ epsilon_rate <- paste(c(epsilon[3:14]), collapse = '') %>%
 # multiple together
 gamma_rate * epsilon_rate
 
+saveRDS(gamma, here::here("day3", "data", "gamma.rds"))
+
+saveRDS(epsilon, here::here("day3", "data", "epsilon.rds"))
+
 ```
 
 
